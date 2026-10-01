@@ -1109,11 +1109,13 @@
     </div>
     </div> <!-- Fecha appContainer -->
 
-    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"></script>
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
+        // Variáveis Supabase (inicializar depois)
+        let supabaseClient = null;
+
         // Variáveis globais
         let clientes = [];
         let tabelas = {};
@@ -1124,49 +1126,14 @@
         let produtoEmEdicao = { clienteId: null, produtoId: null };
         let clienteEmEdicao = { id: null };
         let tabelaEmEdicao = { id: null };
-        let useFirebase = false; // Desabilitado temporariamente (localStorage funciona normalmente)
+        let useFirebase = false; // Desabilitado (app funciona com localStorage)
         let senhaApp = 'gava2026'; // DEFINA A SENHA AQUI
         let usuarioAutenticado = false;
         let db = null;
         let auth = null;
 
-        // Inicializar Firebase quando estiver pronto
-        function inicializarFirebase() {
-            if (!useFirebase) return; // Firebase desabilitado
-            
-            try {
-                const firebaseConfig = {
-                    apiKey: "AIzaSyB3SFcvL5dqiwUmC5ukHQl4TUVF9FjnrW8",
-                    authDomain: "hortifruti-gava.firebaseapp.com",
-                    projectId: "hortifruti-gava",
-                    storageBucket: "hortifruti-gava.firebasestorage.app",
-                    messagingSenderId: "896767437458",
-                    appId: "1:896767437458:web:de9ef7ff54eb07640014​4b",
-                    measurementId: "G-EL40JC46EE"
-                };
-
-                // Inicializar Firebase
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                auth = firebase.auth();
-
-                // Autenticar anonimamente
-                auth.signInAnonymously().catch(error => {
-                    console.error('Erro ao autenticar:', error);
-                });
-
-                console.log('✓ Firebase inicializado com sucesso!');
-            } catch (error) {
-                console.error('Erro ao inicializar Firebase:', error);
-            }
-        }
-
-        // Chamar inicialização quando DOM está pronto
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', inicializarFirebase);
-        } else {
-            inicializarFirebase();
-        }
+        // Firebase desabilitado - usando localStorage apenas
+        // (Configuração do Firebase removida para evitar erros)
 
         // FUNÇÕES DE AUTENTICAÇÃO
         function verificarSenha() {
@@ -2622,42 +2589,56 @@
             mostrarMensagem('Dados apagados!', 'success');
         }
 
-        async function carregarDadosFirebase() {
-            if (!useFirebase || !db) return;
+        async function carregarDoSupabase() {
+            if (!supabaseClient) {
+                console.log('Supabase não conectado, usando localStorage');
+                return;
+            }
             
             try {
-                // Sincronização em tempo real
-                db.collection('dados').doc('dados-app').onSnapshot((docSnap) => {
-                    if (docSnap.exists) {
-                        const dados = docSnap.data();
-                        clientes = dados.clientes || [];
-                        tabelas = dados.tabelas || {};
-                        tabelasPreco = dados.tabelasPreco || {};
-                        pedidos = dados.pedidos || [];
-                        notasFiscais = dados.notasFiscais || [];
-                        
-                        console.log('✓ Dados sincronizados do Firebase!');
-                        
-                        // Atualizar UI
-                        renderClientes();
-                        atualizarSelectClientes();
-                        atualizarSelectTabelas();
-                        atualizarTudo();
-                    } else {
-                        console.log('Nenhum dado encontrado no Firebase, usando localStorage');
-                    }
-                }, (error) => {
-                    console.error('Erro ao sincronizar dados:', error);
-                });
-                
+                // Carregar clientes
+                const { data: clientesData } = await supabaseClient.from('clientes').select('*');
+                if (clientesData && clientesData.length > 0) {
+                    clientes = clientesData;
+                    console.log('✓ Clientes carregados do Supabase!');
+                }
+
+                // Carregar tabelas
+                const { data: tabelasData } = await supabaseClient.from('tabelas').select('*');
+                if (tabelasData && tabelasData.length > 0) {
+                    tabelasData.forEach(t => {
+                        tabelas[t.id] = t;
+                    });
+                    console.log('✓ Tabelas carregadas do Supabase!');
+                }
+
+                // Carregar pedidos
+                const { data: pedidosData } = await supabaseClient.from('pedidos').select('*');
+                if (pedidosData && pedidosData.length > 0) {
+                    pedidos = pedidosData;
+                    console.log('✓ Pedidos carregados do Supabase!');
+                }
+
+                // Carregar notas fiscais
+                const { data: nfsData } = await supabaseClient.from('notasFiscais').select('*');
+                if (nfsData && nfsData.length > 0) {
+                    notasFiscais = nfsData;
+                    console.log('✓ Notas Fiscais carregadas do Supabase!');
+                }
+
+                // Atualizar UI
+                renderClientes();
+                atualizarSelectClientes();
+                atualizarSelectTabelas();
             } catch (error) {
-                console.error('Erro ao carregar dados do Firebase:', error);
+                console.error('Erro ao carregar do Supabase:', error);
+                console.log('Usando dados locais do localStorage...');
             }
         }
 
         // Função de sincronização automática
         function sincronizarDados() {
-            carregarDadosFirebase();
+            carregarDoSupabase();
         }
 
         function salvarDados() {
@@ -2668,21 +2649,59 @@
             localStorage.setItem('pedidos', JSON.stringify(pedidos));
             localStorage.setItem('notasFiscais', JSON.stringify(notasFiscais));
 
-            // Salvar no Firebase (sincronização na nuvem)
-            if (useFirebase && db) {
-                try {
-                    db.collection('dados').doc('dados-app').set({
-                        clientes,
-                        tabelas,
-                        tabelasPreco,
-                        pedidos,
-                        notasFiscais,
-                        ultimaAtualizacao: new Date().toISOString()
-                    });
-                    console.log('✓ Dados salvos no Firebase!');
-                } catch (error) {
-                    console.error('Erro ao salvar no Firebase:', error);
+            // Salvar no Supabase (nuvem)
+            salvarNoSupabase();
+        }
+
+        async function salvarNoSupabase() {
+            if (!supabaseClient) {
+                console.log('Supabase não conectado, usando apenas localStorage');
+                return;
+            }
+            
+            try {
+                // Salvar clientes
+                for (let cliente of clientes) {
+                    if (!cliente.id) {
+                        // Novo cliente
+                        await supabaseClient.from('clientes').insert([cliente]);
+                    } else {
+                        // Atualizar cliente existente
+                        await supabaseClient.from('clientes').update(cliente).eq('id', cliente.id);
+                    }
                 }
+
+                // Salvar pedidos
+                for (let pedido of pedidos) {
+                    if (!pedido.id) {
+                        await supabaseClient.from('pedidos').insert([pedido]);
+                    } else {
+                        await supabaseClient.from('pedidos').update(pedido).eq('id', pedido.id);
+                    }
+                }
+
+                // Salvar tabelas
+                for (let id in tabelas) {
+                    let tabela = tabelas[id];
+                    if (!tabela.id) {
+                        await supabaseClient.from('tabelas').insert([tabela]);
+                    } else {
+                        await supabaseClient.from('tabelas').update(tabela).eq('id', tabela.id);
+                    }
+                }
+
+                // Salvar notas fiscais
+                for (let nf of notasFiscais) {
+                    if (!nf.id) {
+                        await supabaseClient.from('notasFiscais').insert([nf]);
+                    } else {
+                        await supabaseClient.from('notasFiscais').update(nf).eq('id', nf.id);
+                    }
+                }
+
+                console.log('✓ Dados salvos no Supabase!');
+            } catch (error) {
+                console.error('Erro ao salvar no Supabase:', error);
             }
         }
 
@@ -3026,8 +3045,8 @@
         // INICIALIZAR O APLICATIVO
         function inicializar() {
             validarEstruturaDados();
-            // Carregar dados do Firebase (sincronização automática)
-            carregarDadosFirebase();
+            // Carregar dados do Supabase
+            carregarDoSupabase();
             renderClientes();
             atualizarSelectClientes();
             atualizarSelectTabelas();
@@ -3035,6 +3054,12 @@
 
         // CARREGAR QUANDO O DOM ESTIVER PRONTO
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar Supabase
+            const SUPABASE_URL = 'https://bywhrmjtpsimddaznn.supabase.co';
+            const SUPABASE_KEY = 'sb_publishable_vzroe33zjKC-GN_5DxTztQ_qxFcnh5k';
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('✓ Supabase conectado!');
+            
             // Verificar se usuário já está autenticado
             verificarAutenticacao();
             
