@@ -1,0 +1,3055 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hortifruti Gava - Sistema de Gestão de Pedidos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            margin: -20px -20px 30px -20px;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+        }
+
+        .nav-tabs button {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-tabs button:hover {
+            color: #667eea;
+            background: #f9f9f9;
+        }
+
+        .nav-tabs button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .config-tab-btn {
+            padding: 10px 16px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .config-tab-btn:hover {
+            color: #667eea;
+            background: #f9f9f9;
+        }
+
+        .config-tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .config-tab-content {
+            display: none;
+        }
+
+        .config-tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 18px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+            font-size: 13px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+
+        .btn-secondary {
+            background: #a0aec0;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #718096;
+        }
+
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #3182ce;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-card h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        thead {
+            background: #f7fafc;
+            border-top: 2px solid #e2e8f0;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-warning {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .badge-danger {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-primary {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .info-box {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 20px 0 15px 0;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .item-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .item-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .item-card-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .item-card-content {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #f56565;
+        }
+
+        .row-produto {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 100px;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            align-items: flex-end;
+        }
+
+        .total-section {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        .total-section .total-label {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .total-section .total-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn-group button {
+                width: 100%;
+            }
+
+            .row-produto {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+
+        /* MODAL DE LOGIN */
+        #modalLogin {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #modalLogin .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            padding: 40px 30px;
+        }
+
+        #modalLogin input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        #modalLogin input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #modalLogin .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        #modalLogin label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+    <!-- MODAL DE LOGIN/SENHA -->
+    <div id="modalLogin" class="modal" style="display: flex;">
+        <div class="modal-content" style="width: 400px; margin: auto;">
+            <div style="text-align: center; padding: 40px 20px;">
+                <h1 style="font-size: 32px; margin-bottom: 10px;">🔒</h1>
+                <h2 style="margin-bottom: 30px;">Acesso Restrito</h2>
+                
+                <div class="form-group">
+                    <label>Senha de Acesso:</label>
+                    <input type="password" id="loginSenha" placeholder="Digite a senha" style="padding: 12px; font-size: 16px;">
+                </div>
+                
+                <button class="btn-primary" onclick="verificarSenha()" style="width: 100%; padding: 12px; font-size: 16px;">🔓 Entrar</button>
+                
+                <p style="color: #999; margin-top: 20px; font-size: 12px;">Protegido por senha • Hortifruti Gava</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="appContainer" style="display: none;">
+    <div class="header">
+        <div style="flex: 1;">
+            <h1>🍎 Hortifruti Gava - Gestão de Pedidos</h1>
+            <p>Clientes • Tabelas de Preço • Pedidos • Notas Fiscais • Reconciliação</p>
+        </div>
+        <button class="btn-secondary" onclick="fazerLogout()" style="align-self: flex-start; margin-top: 10px;">🔓 Sair</button>
+    </div>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <button class="nav-btn active" data-tab="criar-pedido">🛒 Criar Pedido</button>
+            <button class="nav-btn" data-tab="pedidos">📋 Pedidos</button>
+            <button class="nav-btn" data-tab="notas-fiscais">📄 Notas Fiscais</button>
+            <button class="nav-btn" data-tab="relatorios">📈 Relatórios</button>
+            <button class="nav-btn" data-tab="reconciliacao">✅ Reconciliação</button>
+            <button class="nav-btn" data-tab="configuracoes">⚙️ Configurações</button>
+        </div>
+
+        <!-- ABA CRIAR PEDIDO -->
+        <div id="criar-pedido" class="tab-content active">
+            <div class="card">
+                <h3>Novo Pedido</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente *</label>
+                        <select id="pedido-cliente" onchange="carregarProdutosCliente()">
+                            <option value="">-- Selecione um cliente --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data do Pedido</label>
+                        <input type="date" id="pedido-data">
+                    </div>
+                    <div class="form-group">
+                        <label>Observações</label>
+                        <input type="text" id="pedido-obs" placeholder="Opcional">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Adicionar Produtos ao Pedido</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Produto *</label>
+                        <select id="selecionar-produto" onchange="preencherValorProduto()">
+                            <option value="">-- Selecione um produto --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantidade</label>
+                        <input type="number" id="quantidade-produto" placeholder="1" min="1" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Unit. (R$) *</label>
+                        <input type="number" id="valor-produto" placeholder="0.00" step="0.01">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="btn-success" onclick="adicionarItemPedido()">Adicionar Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Itens do Pedido</h3>
+                <div id="itens-pedido"></div>
+                <div id="total-pedido-section" class="total-section" style="display: none;">
+                    <div class="total-label">Total do Pedido:</div>
+                    <div class="total-value" id="total-pedido-valor">R$ 0,00</div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn-success" onclick="finalizarPedido()" style="width: 100%;">✓ Finalizar Pedido</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA PEDIDOS -->
+        <div id="pedidos" class="tab-content">
+            <div class="card">
+                <h3>Filtros</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select id="pedidos-filtro-cliente" onchange="atualizarEstatisticasPedidos()">
+                            <option value="">Todos os Clientes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Inicial</label>
+                        <input type="date" id="pedidos-data-inicial" onchange="atualizarEstatisticasPedidos()">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Final</label>
+                        <input type="date" id="pedidos-data-final" onchange="atualizarEstatisticasPedidos()">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn-secondary" onclick="limparFiltrosPedidos()" style="width: 100%;">Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h4>Total de Pedidos</h4>
+                    <div class="value" id="total-pedidos-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Valor Total</h4>
+                    <div class="value" id="total-pedidos-valor">R$ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Ticket Médio</h4>
+                    <div class="value" id="ticket-medio">R$ 0,00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Pedidos Realizados</h3>
+                <div id="lista-pedidos"></div>
+            </div>
+        </div>
+
+        <!-- ABA NOTAS FISCAIS -->
+        <div id="notas-fiscais" class="tab-content">
+            <div class="info-box">
+                Registre as notas fiscais emitidas para seus clientes. Cada NF é vinculada a um cliente.
+            </div>
+
+            <div class="card">
+                <h3>Nova Nota Fiscal</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente *</label>
+                        <select id="nf-cliente">
+                            <option value="">-- Selecione um cliente --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Número NF *</label>
+                        <input type="text" id="nf-numero" placeholder="Ex: 001234">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor (R$) *</label>
+                        <input type="number" id="nf-valor" placeholder="0.00" step="0.01">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data da NF</label>
+                        <input type="date" id="nf-data">
+                    </div>
+                    <div class="form-group">
+                        <label>Observações</label>
+                        <input type="text" id="nf-obs" placeholder="Opcional">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="btn-primary" onclick="adicionarNotaFiscal()">Registrar NF</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Filtrar Notas Fiscais</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select id="filtro-nf-cliente" onchange="filtrarNotasFiscais()">
+                            <option value="">-- Todas --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data De</label>
+                        <input type="date" id="filtro-nf-data-de" onchange="filtrarNotasFiscais()">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Até</label>
+                        <input type="date" id="filtro-nf-data-ate" onchange="filtrarNotasFiscais()">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="btn-secondary" onclick="limparFiltrosNF()">Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Notas Fiscais Registradas</h3>
+                <div id="lista-notas-fiscais"></div>
+            </div>
+        </div>
+
+        <!-- ABA RECONCILIAÇÃO -->
+        <div id="reconciliacao" class="tab-content">
+            <div class="info-box">
+                Acompanhe a diferença entre pedidos criados e notas fiscais emitidas. Identifique pendências e confirme faturamentos.
+            </div>
+
+            <div class="card">
+                <h3>Filtros</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select id="reconciliacao-filtro-cliente" onchange="atualizarReconciliacao()">
+                            <option value="">Todos os Clientes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Inicial</label>
+                        <input type="date" id="reconciliacao-data-inicial" onchange="atualizarReconciliacao()">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Final</label>
+                        <input type="date" id="reconciliacao-data-final" onchange="atualizarReconciliacao()">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn-secondary" onclick="limparFiltrosReconciliacao()" style="width: 100%;">Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h4>Total em Pedidos</h4>
+                    <div class="value" id="reconciliacao-total-pedidos">R$ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total em NFs</h4>
+                    <div class="value" id="reconciliacao-total-nfs">R$ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Diferença</h4>
+                    <div class="value" id="reconciliacao-diferenca">R$ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Pedidos Faturados</h4>
+                    <div class="value" id="reconciliacao-pedidos-faturados">0%</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Reconciliação por Cliente</h3>
+                <div id="reconciliacao-por-cliente"></div>
+            </div>
+        </div>
+
+        <!-- ABA RELATÓRIOS -->
+        <div id="relatorios" class="tab-content">
+            <div class="card">
+                <h3>Filtros</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <select id="relatorios-filtro-cliente" onchange="atualizarRelatorios()">
+                            <option value="">Todos os Clientes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Inicial</label>
+                        <input type="date" id="relatorios-data-inicial" onchange="atualizarRelatorios()">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Final</label>
+                        <input type="date" id="relatorios-data-final" onchange="atualizarRelatorios()">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn-secondary" onclick="limparFiltrosRelatorios()" style="width: 100%;">Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Exportar Dados</h3>
+                <div class="btn-group">
+                    <button class="btn-success" onclick="exportarExcel()">📥 Exportar para Excel</button>
+                    <button class="btn-success" onclick="exportarPDF()">📄 Exportar Pedidos em PDF</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Resumo por Cliente</h3>
+                <div id="resumo-clientes"></div>
+            </div>
+        </div>
+
+        <!-- ABA CONFIGURAÇÕES -->
+        <div id="configuracoes" class="tab-content">
+            <div class="config-tabs" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd;">
+                <button class="config-tab-btn active" onclick="mostrarConfigTab('config-clientes', this)">👥 Clientes</button>
+                <button class="config-tab-btn" onclick="mostrarConfigTab('config-tabelas', this)">💰 Tabelas de Preço</button>
+                <button class="config-tab-btn" onclick="mostrarConfigTab('config-sistema', this)">⚙️ Sistema</button>
+            </div>
+
+            <!-- SUBABA: CLIENTES -->
+            <div id="config-clientes" class="config-tab-content active">
+                <div class="card">
+                    <h3>Novo Cliente</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome/Empresa</label>
+                            <input type="text" id="cliente-nome" placeholder="Ex: Padaria do João">
+                        </div>
+                        <div class="form-group">
+                            <label>Contato/Telefone</label>
+                            <input type="text" id="cliente-contato" placeholder="Ex: (11) 98765-4321">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="cliente-email" placeholder="Ex: joao@example.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Endereço</label>
+                            <input type="text" id="cliente-endereco" placeholder="Opcional">
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                            <button class="btn-primary" onclick="adicionarCliente()">Adicionar Cliente</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Clientes Cadastrados</h3>
+                    <div id="lista-clientes"></div>
+                </div>
+            </div>
+
+            <!-- SUBABA: TABELAS DE PREÇO -->
+            <div id="config-tabelas" class="config-tab-content">
+                <div class="info-box">
+                    Crie tabelas de preço reutilizáveis e vincule a múltiplas empresas
+                </div>
+
+                <div class="card">
+                    <h3>Criar Nova Tabela de Preço</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome da Tabela</label>
+                            <input type="text" id="tabela-nome" placeholder="Ex: Tabela Padrão, Tabela Premium">
+                        </div>
+                        <div style="display: flex; align-items: flex-end;">
+                            <button class="btn-primary" onclick="criarNovaTabela()">Criar Tabela</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Selecionar Tabela de Preço</h3>
+                    <div class="form-group">
+                        <label>Tabela</label>
+                        <select id="selecionar-tabela-preco" onchange="carregarTabelaPreco()">
+                            <option value="">-- Selecione uma tabela --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="tabela-preco-section" style="display: none;">
+                    <div class="card">
+                        <h3>Vincular Empresas a Esta Tabela</h3>
+                        <div id="clientes-vinculados"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Adicionar Produto</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nome do Produto</label>
+                                <input type="text" id="produto-nome" placeholder="Ex: Pão Francês">
+                            </div>
+                            <div class="form-group">
+                                <label>Descrição (opcional)</label>
+                                <input type="text" id="produto-descricao" placeholder="Ex: 500g">
+                            </div>
+                            <div class="form-group">
+                                <label>Valor Unitário (R$)</label>
+                                <input type="number" id="produto-valor" placeholder="0.00" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label>Unidade de Medida</label>
+                                <select id="produto-unidade">
+                                    <option value="">-- Selecione --</option>
+                                    <option value="kg">kg (Quilos)</option>
+                                    <option value="g">g (Gramas)</option>
+                                    <option value="un">un (Unidades)</option>
+                                    <option value="cx">cx (Caixa)</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button class="btn-primary" onclick="adicionarProdutoTabela()">Adicionar Produto</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Produtos da Tabela</h3>
+                        <div id="tabela-produtos"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBABA: SISTEMA -->
+            <div id="config-sistema" class="config-tab-content">
+                <div class="card">
+                    <h3>Backup e Dados</h3>
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="fazerBackup()">💾 Fazer Backup</button>
+                        <button class="btn-primary" onclick="document.getElementById('upload-backup').click()">📂 Restaurar Backup</button>
+                        <input type="file" id="upload-backup" style="display:none;" accept=".json" onchange="restaurarBackup(event)">
+                        <button class="btn-danger" onclick="limparTodosDados()">🗑️ Limpar Tudo</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Informações do Sistema</h3>
+                    <table>
+                        <tr>
+                            <td><strong>Total de Clientes:</strong></td>
+                            <td id="info-total-clientes">0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total de Pedidos:</strong></td>
+                            <td id="info-total-pedidos">0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Valor Total em Pedidos:</strong></td>
+                            <td id="info-valor-pedidos">R$ 0,00</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data da Última Atualização:</strong></td>
+                            <td id="info-ultima-atualizacao">--</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Cliente -->
+    <div id="modalEditarCliente" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal('modalEditarCliente')">&times;</span>
+            <h3>Editar Cliente</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nome/Empresa</label>
+                    <input type="text" id="modal-cliente-nome" placeholder="Ex: Padaria do João">
+                </div>
+                <div class="form-group">
+                    <label>Contato/Telefone</label>
+                    <input type="text" id="modal-cliente-contato" placeholder="Ex: (11) 98765-4321">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="modal-cliente-email" placeholder="Ex: joao@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Endereço</label>
+                    <input type="text" id="modal-cliente-endereco" placeholder="Opcional">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tabela de Preço</label>
+                    <select id="modal-cliente-tabela">
+                        <option value="">-- Selecione uma tabela --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn-primary" onclick="salvarEdicaoCliente()">💾 Salvar</button>
+                <button class="btn-secondary" onclick="fecharModal('modalEditarCliente')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ver Pedido -->
+    <div id="modalVerPedido" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal('modalVerPedido')">&times;</span>
+            <h3>Detalhes do Pedido</h3>
+            <div id="modal-pedido-detalhes"></div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Produto -->
+    <div id="modalEditarProduto" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal('modalEditarProduto')">&times;</span>
+            <h3>Editar Produto</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="modal-produto-nome" placeholder="Ex: Pão Francês">
+                </div>
+                <div class="form-group">
+                    <label>Descrição (opcional)</label>
+                    <input type="text" id="modal-produto-descricao" placeholder="Ex: 500g">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Valor Unitário (R$)</label>
+                    <input type="number" id="modal-produto-valor" placeholder="0.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Unidade de Medida</label>
+                    <select id="modal-produto-unidade">
+                        <option value="">-- Selecione --</option>
+                        <option value="kg">kg (Quilos)</option>
+                        <option value="g">g (Gramas)</option>
+                        <option value="un">un (Unidades)</option>
+                        <option value="cx">cx (Caixa)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn-primary" onclick="salvarEdicaoProduto()">💾 Salvar</button>
+                <button class="btn-secondary" onclick="fecharModal('modalEditarProduto')">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    </div> <!-- Fecha appContainer -->
+
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"></script>
+
+    <script>
+        // Variáveis globais
+        let clientes = [];
+        let tabelas = {};
+        let tabelasPreco = {};
+        let pedidos = [];
+        let notasFiscais = [];
+        let pedidoTemp = { items: [] };
+        let produtoEmEdicao = { clienteId: null, produtoId: null };
+        let clienteEmEdicao = { id: null };
+        let tabelaEmEdicao = { id: null };
+        let useFirebase = false; // Desabilitado temporariamente (localStorage funciona normalmente)
+        let senhaApp = 'gava2026'; // DEFINA A SENHA AQUI
+        let usuarioAutenticado = false;
+        let db = null;
+        let auth = null;
+
+        // Inicializar Firebase quando estiver pronto
+        function inicializarFirebase() {
+            if (!useFirebase) return; // Firebase desabilitado
+            
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyB3SFcvL5dqiwUmC5ukHQl4TUVF9FjnrW8",
+                    authDomain: "hortifruti-gava.firebaseapp.com",
+                    projectId: "hortifruti-gava",
+                    storageBucket: "hortifruti-gava.firebasestorage.app",
+                    messagingSenderId: "896767437458",
+                    appId: "1:896767437458:web:de9ef7ff54eb07640014​4b",
+                    measurementId: "G-EL40JC46EE"
+                };
+
+                // Inicializar Firebase
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                auth = firebase.auth();
+
+                // Autenticar anonimamente
+                auth.signInAnonymously().catch(error => {
+                    console.error('Erro ao autenticar:', error);
+                });
+
+                console.log('✓ Firebase inicializado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao inicializar Firebase:', error);
+            }
+        }
+
+        // Chamar inicialização quando DOM está pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarFirebase);
+        } else {
+            inicializarFirebase();
+        }
+
+        // FUNÇÕES DE AUTENTICAÇÃO
+        function verificarSenha() {
+            const senha = document.getElementById('loginSenha').value;
+            
+            if (senha === senhaApp) {
+                usuarioAutenticado = true;
+                localStorage.setItem('usuarioAutenticado', 'true');
+                document.getElementById('modalLogin').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                document.getElementById('loginSenha').value = '';
+                inicializar();
+                console.log('✓ Autenticado! Bem-vindo!');
+            } else {
+                alert('❌ Senha incorreta!');
+                document.getElementById('loginSenha').value = '';
+                document.getElementById('loginSenha').focus();
+            }
+        }
+
+        function verificarAutenticacao() {
+            const autenticado = localStorage.getItem('usuarioAutenticado') === 'true';
+            if (autenticado) {
+                usuarioAutenticado = true;
+                document.getElementById('modalLogin').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                inicializar();
+            }
+        }
+
+        function fazerLogout() {
+            if (confirm('Tem certeza que quer sair?')) {
+                usuarioAutenticado = false;
+                localStorage.setItem('usuarioAutenticado', 'false');
+                document.getElementById('modalLogin').style.display = 'flex';
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('loginSenha').value = '';
+                document.getElementById('loginSenha').focus();
+                console.log('Você foi desconectado!');
+            }
+        }
+
+        // Tornar funções acessíveis globalmente
+        window.verificarSenha = verificarSenha;
+        window.verificarAutenticacao = verificarAutenticacao;
+        window.fazerLogout = fazerLogout;
+
+        // Permitir pressionar ENTER no campo de senha
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputSenha = document.getElementById('loginSenha');
+            if (inputSenha) {
+                inputSenha.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        verificarSenha();
+                    }
+                });
+            }
+        });
+
+        function validarEstruturaDados() {
+            try {
+                // Verificar se há clientes com estrutura antiga (sem tabelaPrecosId)
+                let temErro = false;
+                
+                if (clientes.length > 0) {
+                    const clienteInvalido = clientes.some(c => !('tabelaPrecosId' in c));
+                    if (clienteInvalido) {
+                        temErro = true;
+                    }
+                }
+
+                // Se há erro de estrutura, limpar tudo
+                if (temErro) {
+                    console.log('Detectada estrutura de dados antiga. Limpando...');
+                    localStorage.clear();
+                    clientes = [];
+                    tabelas = {};
+                    tabelasPreco = {};
+                    pedidos = [];
+                    notasFiscais = [];
+                    salvarDados();
+                    return true;
+                }
+            } catch (e) {
+                console.error('Erro na validação:', e);
+                localStorage.clear();
+                location.reload();
+            }
+            return false;
+        }
+
+        function mudarAba(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tab === 'pedidos') {
+                atualizarEstatisticasPedidos();
+            } else if (tab === 'relatorios') {
+                atualizarRelatorios();
+            } else if (tab === 'reconciliacao') {
+                atualizarReconciliacao();
+            }
+        }
+
+        // ===== CLIENTES =====
+        function adicionarCliente() {
+            const nome = document.getElementById('cliente-nome').value.trim();
+            const contato = document.getElementById('cliente-contato').value.trim();
+            const email = document.getElementById('cliente-email').value.trim();
+            const endereco = document.getElementById('cliente-endereco').value.trim();
+
+            if (!nome) {
+                alert('Preencha o nome do cliente');
+                return;
+            }
+
+            const id = Date.now();
+            clientes.push({
+                id,
+                nome,
+                contato,
+                email,
+                endereco,
+                tabelaPrecosId: '',
+                dataCriacao: new Date().toLocaleString()
+            });
+
+            salvarDados();
+            limparFormCliente();
+            renderClientes();
+            atualizarSelectClientes();
+            mostrarMensagem('Cliente adicionado com sucesso!', 'success');
+        }
+
+        function editarCliente(id) {
+            // Converter para número pois vem como string do onclick
+            id = parseInt(id);
+            
+            const cliente = clientes.find(c => c.id === id);
+            if (!cliente) {
+                alert('Cliente não encontrado');
+                console.log('Clientes disponíveis:', clientes);
+                console.log('ID procurado:', id);
+                return;
+            }
+
+            clienteEmEdicao.id = id;
+
+            // Preencher modal
+            document.getElementById('modal-cliente-nome').value = cliente.nome;
+            document.getElementById('modal-cliente-contato').value = cliente.contato || '';
+            document.getElementById('modal-cliente-email').value = cliente.email || '';
+            document.getElementById('modal-cliente-endereco').value = cliente.endereco || '';
+            document.getElementById('modal-cliente-tabela').value = cliente.tabelaPrecosId || '';
+
+            // Preencher select de tabelas
+            const selectTabela = document.getElementById('modal-cliente-tabela');
+            selectTabela.innerHTML = '<option value="">-- Nenhuma tabela --</option>';
+            Object.values(tabelas).forEach(t => {
+                selectTabela.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+            });
+            selectTabela.value = cliente.tabelaPrecosId || '';
+
+            document.getElementById('modalEditarCliente').style.display = 'block';
+        }
+
+        function salvarEdicaoCliente() {
+            let id = clienteEmEdicao.id;
+            id = parseInt(id);
+            
+            const cliente = clientes.find(c => c.id === id);
+            if (!cliente) {
+                alert('Cliente não encontrado ao salvar');
+                console.log('ID procurado:', id, 'Clientes:', clientes);
+                return;
+            }
+
+            const nome = document.getElementById('modal-cliente-nome').value.trim();
+            const contato = document.getElementById('modal-cliente-contato').value.trim();
+            const email = document.getElementById('modal-cliente-email').value.trim();
+            const endereco = document.getElementById('modal-cliente-endereco').value.trim();
+            const tabelaPrecosId = document.getElementById('modal-cliente-tabela').value;
+
+            if (!nome) {
+                alert('Digite o nome da empresa');
+                return;
+            }
+
+            cliente.nome = nome;
+            cliente.contato = contato;
+            cliente.email = email;
+            cliente.endereco = endereco;
+            cliente.tabelaPrecosId = tabelaPrecosId;
+
+            console.log('Salvando cliente:', cliente);
+            salvarDados();
+            renderClientes();
+            atualizarSelectClientes();
+            fecharModal('modalEditarCliente');
+            mostrarMensagem('Cliente atualizado!', 'success');
+        }
+
+        function deletarCliente(id) {
+            id = parseInt(id);
+            if (!confirm('Tem certeza que quer deletar este cliente?')) return;
+            clientes = clientes.filter(c => c.id !== id);
+            salvarDados();
+            renderClientes();
+            atualizarSelectClientes();
+            mostrarMensagem('Cliente deletado!', 'success');
+        }
+
+        function renderClientes() {
+            try {
+                const lista = document.getElementById('lista-clientes');
+                if (!lista) return;
+                
+                if (!clientes || clientes.length === 0) {
+                    lista.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum cliente cadastrado</p>';
+                    return;
+                }
+
+                let html = '';
+                clientes.forEach(c => {
+                    const pedidosCliente = pedidos.filter(p => p.clienteId === c.id).length;
+                    const tabelaVinculada = tabelas[c.tabelaPrecosId]?.nome || 'Nenhuma';
+                    html += `
+                        <div class="item-card">
+                            <div class="item-card-header">
+                                <div>
+                                    <div class="item-card-title">${c.nome}</div>
+                                    <div class="item-card-content">
+                                        ${c.contato ? 'Tel: ' + c.contato + ' | ' : ''}
+                                        ${c.email || ''}
+                                    </div>
+                                    <div class="item-card-content" style="margin-top: 8px;">
+                                        Endereço: ${c.endereco || 'Não informado'}<br>
+                                        Tabela de Preço: <strong>${tabelaVinculada}</strong><br>
+                                        Pedidos: <strong>${pedidosCliente}</strong>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="btn-info btn-small" onclick="editarCliente(${c.id})">✎ Editar</button>
+                                    <button class="btn-danger btn-small" onclick="deletarCliente(${c.id})">✕ Deletar</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                lista.innerHTML = html;
+            } catch (e) {
+                console.error('Erro ao renderizar clientes:', e);
+                document.getElementById('lista-clientes').innerHTML = '<p style="color: red;">Erro ao carregar clientes. Tente limpar os dados.</p>';
+            }
+        }
+
+        function atualizarSelectClientes() {
+            try {
+                const selects = ['pedido-cliente', 'nf-cliente', 'filtro-nf-cliente'];
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    if (!select) return;
+                    
+                    const valor = select.value;
+                    select.innerHTML = '<option value="">-- Selecione um cliente --</option>';
+                    
+                    if (clientes && clientes.length > 0) {
+                        clientes.forEach(c => {
+                            select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+                        });
+                    }
+                    
+                    // Para o filtro, adiciona opção "Todas"
+                    if (selectId === 'filtro-nf-cliente') {
+                        select.innerHTML = '<option value="">-- Todas --</option>';
+                        if (clientes && clientes.length > 0) {
+                            clientes.forEach(c => {
+                                select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+                            });
+                        }
+                    }
+                    
+                    select.value = valor;
+                });
+            } catch (e) {
+                console.error('Erro ao atualizar selects de clientes:', e);
+            }
+        }
+
+        function limparFormCliente() {
+            document.getElementById('cliente-nome').value = '';
+            document.getElementById('cliente-contato').value = '';
+            document.getElementById('cliente-email').value = '';
+            document.getElementById('cliente-endereco').value = '';
+        }
+
+        // ===== TABELAS DE PREÇO REUTILIZÁVEIS =====
+        function criarNovaTabela() {
+            const nome = document.getElementById('tabela-nome').value.trim();
+            if (!nome) {
+                alert('Digite o nome da tabela');
+                return;
+            }
+
+            const id = 'tabela_' + Date.now();
+            tabelas[id] = {
+                id,
+                nome,
+                produtos: []
+            };
+
+            salvarDados();
+            atualizarSelectTabelas();
+            document.getElementById('tabela-nome').value = '';
+            mostrarMensagem('Tabela de preço criada!', 'success');
+        }
+
+        function atualizarSelectTabelas() {
+            try {
+                const select = document.getElementById('selecionar-tabela-preco');
+                const selectModalCliente = document.getElementById('modal-cliente-tabela');
+                if (!select || !selectModalCliente) return;
+                
+                const valor = select.value;
+                select.innerHTML = '<option value="">-- Selecione uma tabela --</option>';
+                selectModalCliente.innerHTML = '<option value="">-- Selecione uma tabela --</option>';
+                
+                if (tabelas && Object.keys(tabelas).length > 0) {
+                    Object.values(tabelas).forEach(t => {
+                        select.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+                        selectModalCliente.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+                    });
+                }
+                
+                select.value = valor;
+            } catch (e) {
+                console.error('Erro ao atualizar selects de tabelas:', e);
+            }
+        }
+
+        function renderClientesVinculados() {
+            const tabelaId = tabelaEmEdicao.id;
+            const clientesVinc = clientes.filter(c => c.tabelaPrecosId === tabelaId);
+            const container = document.getElementById('clientes-vinculados');
+
+            if (clientesVinc.length === 0) {
+                container.innerHTML = '<p style="color: #999;">Nenhuma empresa vinculada a esta tabela</p>';
+                return;
+            }
+
+            let html = '<ul style="list-style: none; padding: 0;">';
+            clientesVinc.forEach(c => {
+                html += `<li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                    <strong>${c.nome}</strong>
+                    <button class="btn-danger btn-small" onclick="desvincularCliente('${c.id}')">Desvincular</button>
+                </li>`;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        }
+
+        function desvincularCliente(clienteId) {
+            if (!confirm('Desvincular cliente desta tabela?')) return;
+            const cliente = clientes.find(c => c.id === clienteId);
+            if (cliente) {
+                cliente.tabelaPrecosId = '';
+                salvarDados();
+                renderClientesVinculados();
+                mostrarMensagem('Cliente desvinculado!', 'success');
+            }
+        }
+
+        // ===== TABELAS DE PREÇO =====
+        function carregarTabelaPreco() {
+            const tabelaId = document.getElementById('selecionar-tabela-preco').value;
+            if (!tabelaId) {
+                document.getElementById('tabela-preco-section').style.display = 'none';
+                return;
+            }
+
+            tabelaEmEdicao.id = tabelaId;
+            document.getElementById('tabela-preco-section').style.display = 'block';
+            limparFormProduto();
+            renderProdutosTabela();
+            renderClientesVinculados();
+        }
+
+        function adicionarProdutoTabela() {
+            const tabelaId = tabelaEmEdicao.id;
+            if (!tabelaId) {
+                alert('Selecione uma tabela primeiro');
+                return;
+            }
+
+            const nome = document.getElementById('produto-nome').value.trim();
+            const descricao = document.getElementById('produto-descricao').value.trim();
+            const valor = parseFloat(document.getElementById('produto-valor').value);
+            const unidade = document.getElementById('produto-unidade').value;
+
+            if (!nome || !valor || valor <= 0) {
+                alert('Preencha nome e valor do produto');
+                return;
+            }
+
+            if (!unidade) {
+                alert('Selecione a unidade de medida');
+                return;
+            }
+
+            tabelas[tabelaId].produtos.push({
+                id: Date.now(),
+                nome,
+                descricao,
+                valor,
+                unidade
+            });
+
+            salvarDados();
+            limparFormProduto();
+            renderProdutosTabela();
+            mostrarMensagem('Produto adicionado à tabela!', 'success');
+        }
+
+        function editarProdutoTabela(produtoId) {
+            const tabelaId = tabelaEmEdicao.id;
+            const produto = tabelas[tabelaId].produtos.find(p => p.id === produtoId);
+            if (!produto) return;
+
+            // Armazenar referência do produto sendo editado
+            produtoEmEdicao.tabelaId = tabelaId;
+            produtoEmEdicao.produtoId = produtoId;
+
+            // Preencher modal com dados do produto
+            document.getElementById('modal-produto-nome').value = produto.nome;
+            document.getElementById('modal-produto-descricao').value = produto.descricao || '';
+            document.getElementById('modal-produto-valor').value = produto.valor;
+            document.getElementById('modal-produto-unidade').value = produto.unidade || '';
+
+            // Abrir modal
+            document.getElementById('modalEditarProduto').style.display = 'block';
+        }
+
+        function salvarEdicaoProduto() {
+            const { tabelaId, produtoId } = produtoEmEdicao;
+
+            const nome = document.getElementById('modal-produto-nome').value.trim();
+            const descricao = document.getElementById('modal-produto-descricao').value.trim();
+            const valor = parseFloat(document.getElementById('modal-produto-valor').value);
+            const unidade = document.getElementById('modal-produto-unidade').value;
+
+            if (!nome || !valor || valor <= 0) {
+                alert('Preencha nome e valor do produto');
+                return;
+            }
+
+            if (!unidade) {
+                alert('Selecione a unidade de medida');
+                return;
+            }
+
+            // Encontrar e atualizar produto
+            const produto = tabelas[tabelaId].produtos.find(p => p.id === produtoId);
+            if (!produto) {
+                alert('Produto não encontrado');
+                return;
+            }
+
+            produto.nome = nome;
+            produto.descricao = descricao;
+            produto.valor = valor;
+            produto.unidade = unidade;
+
+            salvarDados();
+            renderProdutosTabela();
+            fecharModal('modalEditarProduto');
+            mostrarMensagem('Produto atualizado!', 'success');
+        }
+
+        function deletarProdutoTabela(produtoId) {
+            if (!confirm('Deletar este produto?')) return;
+            const tabelaId = tabelaEmEdicao.id;
+            tabelas[tabelaId].produtos = tabelas[tabelaId].produtos.filter(p => p.id !== produtoId);
+            salvarDados();
+            renderProdutosTabela();
+            mostrarMensagem('Produto deletado!', 'success');
+        }
+
+        function renderProdutosTabela() {
+            const tabelaId = tabelaEmEdicao.id;
+            const produtos = tabelas[tabelaId]?.produtos || [];
+            const container = document.getElementById('tabela-produtos');
+
+            if (produtos.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum produto na tabela</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Produto</th><th>Descrição</th><th>Unidade</th><th>Valor Unit.</th><th>Ações</th></tr></thead><tbody>';
+            produtos.forEach(p => {
+                html += `<tr>
+                    <td><strong>${p.nome}</strong></td>
+                    <td>${p.descricao}</td>
+                    <td><strong>${p.unidade || '-'}</strong></td>
+                    <td>R$ ${p.valor.toFixed(2).replace('.', ',')}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-info btn-small" onclick="editarProdutoTabela(${p.id})">✎ Editar</button>
+                            <button class="btn-danger btn-small" onclick="deletarProdutoTabela(${p.id})">✕ Deletar</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function limparFormProduto() {
+            document.getElementById('produto-nome').value = '';
+            document.getElementById('produto-descricao').value = '';
+            document.getElementById('produto-valor').value = '';
+            document.getElementById('produto-unidade').value = '';
+        }
+
+        // ===== PEDIDOS =====
+        function carregarProdutosCliente() {
+            const clienteId = parseInt(document.getElementById('pedido-cliente').value);
+            const select = document.getElementById('selecionar-produto');
+
+            select.innerHTML = '<option value="">-- Selecione um produto --</option>';
+            document.getElementById('valor-produto').value = '';
+
+            if (!clienteId) {
+                pedidoTemp.items = [];
+                renderItensPedido();
+                return;
+            }
+
+            const cliente = clientes.find(c => c.id === clienteId);
+            if (!cliente || !cliente.tabelaPrecosId) {
+                alert('Este cliente não tem uma tabela de preço vinculada. Configure na aba de Configurações.');
+                document.getElementById('pedido-cliente').value = '';
+                return;
+            }
+
+            const produtos = tabelas[cliente.tabelaPrecosId]?.produtos || [];
+            if (produtos.length === 0) {
+                alert('A tabela de preço deste cliente não tem produtos.');
+                document.getElementById('pedido-cliente').value = '';
+                return;
+            }
+
+            produtos.forEach(p => {
+                select.innerHTML += `<option value="${p.id}" data-nome="${p.nome}" data-valor="${p.valor}" data-unidade="${p.unidade || ''}">
+                    ${p.nome} (${p.unidade}) - R$ ${p.valor.toFixed(2).replace('.', ',')}
+                </option>`;
+            });
+
+            pedidoTemp.clienteId = clienteId;
+            pedidoTemp.items = [];
+            renderItensPedido();
+            document.getElementById('quantidade-produto').value = '1';
+        }
+
+        function adicionarItemPedido() {
+            const clienteId = parseInt(document.getElementById('pedido-cliente').value);
+            const produtoSelect = document.getElementById('selecionar-produto');
+            const quantidade = parseFloat(document.getElementById('quantidade-produto').value);
+            const valorEditado = parseFloat(document.getElementById('valor-produto').value);
+
+            if (!clienteId || !produtoSelect.value || !quantidade || quantidade <= 0) {
+                alert('Selecione cliente, produto e quantidade');
+                return;
+            }
+
+            if (!valorEditado || valorEditado <= 0) {
+                alert('Preencha o valor do produto');
+                return;
+            }
+
+            const produtoId = produtoSelect.value;
+            const cliente = clientes.find(c => c.id === clienteId);
+            const tabelaId = cliente?.tabelaPrecosId;
+            const produto = tabelas[tabelaId]?.produtos.find(p => p.id == produtoId);
+
+            if (!produto) return;
+
+            const item = {
+                id: Date.now(),
+                produtoId,
+                nome: produto.nome,
+                quantidade,
+                valor: valorEditado,
+                subtotal: quantidade * valorEditado,
+                unidade: produto.unidade || ''
+            };
+
+            pedidoTemp.items.push(item);
+            renderItensPedido();
+            document.getElementById('quantidade-produto').value = '1';
+            document.getElementById('valor-produto').value = '';
+            produtoSelect.value = '';
+            mostrarMensagem('Item adicionado!', 'success');
+        }
+
+        function removerItemPedido(itemId) {
+            pedidoTemp.items = pedidoTemp.items.filter(i => i.id !== itemId);
+            renderItensPedido();
+        }
+
+        function preencherValorProduto() {
+            const clienteId = parseInt(document.getElementById('pedido-cliente').value);
+            const produtoSelect = document.getElementById('selecionar-produto');
+            const produtoId = produtoSelect.value;
+
+            if (!clienteId || !produtoId) {
+                document.getElementById('valor-produto').value = '';
+                return;
+            }
+
+            const cliente = clientes.find(c => c.id === clienteId);
+            const tabelaId = cliente?.tabelaPrecosId;
+            const produto = tabelas[tabelaId]?.produtos.find(p => p.id == produtoId);
+
+            if (produto) {
+                document.getElementById('valor-produto').value = produto.valor.toFixed(2);
+            }
+        }
+
+        function renderItensPedido() {
+            const container = document.getElementById('itens-pedido');
+            const totalSection = document.getElementById('total-pedido-section');
+
+            if (pedidoTemp.items.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum item adicionado</p>';
+                totalSection.style.display = 'none';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Produto</th><th>Quantidade</th><th>Valor Unit.</th><th>Subtotal</th><th>Ação</th></tr></thead><tbody>';
+            let total = 0;
+
+            pedidoTemp.items.forEach(item => {
+                const qtdComUnidade = `${item.quantidade.toFixed(2).replace('.', ',')} ${item.unidade}`;
+                html += `<tr>
+                    <td>${item.nome}</td>
+                    <td>${qtdComUnidade}</td>
+                    <td>R$ ${item.valor.toFixed(2).replace('.', ',')}</td>
+                    <td><strong>R$ ${item.subtotal.toFixed(2).replace('.', ',')}</strong></td>
+                    <td><button class="btn-danger btn-small" onclick="removerItemPedido(${item.id})">✕</button></td>
+                </tr>`;
+                total += item.subtotal;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+
+            document.getElementById('total-pedido-valor').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+            totalSection.style.display = 'block';
+        }
+
+        function finalizarPedido() {
+            if (pedidoTemp.items.length === 0) {
+                alert('Adicione produtos ao pedido');
+                return;
+            }
+
+            const clienteId = parseInt(document.getElementById('pedido-cliente').value);
+            const data = document.getElementById('pedido-data').value;
+            const obs = document.getElementById('pedido-obs').value.trim();
+
+            if (!data) {
+                alert('Selecione uma data');
+                return;
+            }
+
+            const total = pedidoTemp.items.reduce((sum, item) => sum + item.subtotal, 0);
+
+            const pedido = {
+                id: Date.now(),
+                clienteId,
+                data,
+                obs,
+                items: JSON.parse(JSON.stringify(pedidoTemp.items)),
+                total,
+                dataCriacao: new Date().toLocaleString()
+            };
+
+            pedidos.push(pedido);
+            salvarDados();
+            atualizarTudo();
+
+            document.getElementById('pedido-cliente').value = '';
+            document.getElementById('pedido-obs').value = '';
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('pedido-data').value = hoje;
+            document.getElementById('selecionar-produto').innerHTML = '<option value="">-- Selecione um produto --</option>';
+            pedidoTemp = { items: [] };
+            renderItensPedido();
+
+            mostrarMensagem('Pedido criado com sucesso!', 'success');
+            mudarAba('pedidos');
+        }
+
+        function atualizarEstatisticasPedidos() {
+            const clienteFiltro = document.getElementById('pedidos-filtro-cliente')?.value || '';
+            const dataInicial = document.getElementById('pedidos-data-inicial')?.value || '';
+            const dataFinal = document.getElementById('pedidos-data-final')?.value || '';
+
+            let pedidosFiltrados = pedidos;
+            if (clienteFiltro) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.clienteId == clienteFiltro);
+            }
+            if (dataInicial) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) >= new Date(dataInicial));
+            }
+            if (dataFinal) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) <= new Date(dataFinal));
+            }
+
+            const totalPedidos = pedidosFiltrados.length;
+            const totalValor = pedidosFiltrados.reduce((sum, p) => sum + p.total, 0);
+            const ticketMedio = totalPedidos > 0 ? totalValor / totalPedidos : 0;
+
+            document.getElementById('total-pedidos-count').textContent = totalPedidos;
+            document.getElementById('total-pedidos-valor').textContent = 'R$ ' + totalValor.toFixed(2).replace('.', ',');
+            document.getElementById('ticket-medio').textContent = 'R$ ' + ticketMedio.toFixed(2).replace('.', ',');
+
+            renderListaPedidos(clienteFiltro, dataInicial, dataFinal);
+        }
+
+        function renderListaPedidos(clienteFiltro = '', dataInicial = '', dataFinal = '') {
+            const lista = document.getElementById('lista-pedidos');
+
+            let pedidosFiltrados = pedidos;
+            if (clienteFiltro) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.clienteId == clienteFiltro);
+            }
+            if (dataInicial) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) >= new Date(dataInicial));
+            }
+            if (dataFinal) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) <= new Date(dataFinal));
+            }
+
+            if (pedidosFiltrados.length === 0) {
+                lista.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum pedido realizado</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Data</th><th>Cliente</th><th>Qtd Itens</th><th>Total</th><th>Ações</th></tr></thead><tbody>';
+
+            [...pedidosFiltrados].reverse().forEach(p => {
+                const cliente = clientes.find(c => c.id == p.clienteId);
+                html += `<tr>
+                    <td>${new Date(p.data).toLocaleDateString('pt-BR')}</td>
+                    <td>${cliente ? cliente.nome : 'Desconhecido'}</td>
+                    <td>${p.items.length} item(ns)</td>
+                    <td><strong>R$ ${p.total.toFixed(2).replace('.', ',')}</strong></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-info btn-small" onclick="verDetalhePedido(${p.id})">👁 Ver</button>
+                            <button class="btn-danger btn-small" onclick="deletarPedido(${p.id})">✕ Deletar</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            lista.innerHTML = html;
+        }
+
+        function verDetalhePedido(pedidoId) {
+            const pedido = pedidos.find(p => p.id === pedidoId);
+            if (!pedido) return;
+
+            const cliente = clientes.find(c => c.id == pedido.clienteId);
+            const modal = document.getElementById('modalVerPedido');
+            const detalhes = document.getElementById('modal-pedido-detalhes');
+
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <p><strong>Cliente:</strong> ${cliente ? cliente.nome : 'Desconhecido'}</p>
+                    <p><strong>Data:</strong> ${new Date(pedido.data).toLocaleDateString('pt-BR')}</p>
+                    <p><strong>Observações:</strong> ${pedido.obs || 'Nenhuma'}</p>
+                </div>
+
+                <h4 style="margin: 20px 0 10px 0;">Itens do Pedido</h4>
+                <table style="width: 100%; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background: #f7fafc;">
+                            <th style="text-align: left;">Produto</th>
+                            <th style="text-align: right;">Qtd</th>
+                            <th style="text-align: right;">Valor Unit.</th>
+                            <th style="text-align: right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pedido.items.map(item => `
+                            <tr>
+                                <td>${item.nome}</td>
+                                <td style="text-align: right;">${item.quantidade.toFixed(2).replace('.', ',')}</td>
+                                <td style="text-align: right;">R$ ${item.valor.toFixed(2).replace('.', ',')}</td>
+                                <td style="text-align: right;"><strong>R$ ${item.subtotal.toFixed(2).replace('.', ',')}</strong></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div style="background: #f7fafc; padding: 15px; border-radius: 6px; text-align: right;">
+                    <div style="font-size: 16px; font-weight: 600; color: #667eea;">
+                        Total: R$ ${pedido.total.toFixed(2).replace('.', ',')}
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn-warning" onclick="gerarPDF(${pedidoId})" style="width: 100%;">📄 Gerar PDF deste Pedido</button>
+                </div>
+            `;
+
+            detalhes.innerHTML = html;
+            modal.style.display = 'block';
+        }
+
+        function deletarPedido(pedidoId) {
+            if (!confirm('Tem certeza?')) return;
+            pedidos = pedidos.filter(p => p.id !== pedidoId);
+            salvarDados();
+            atualizarEstatisticasPedidos();
+            mostrarMensagem('Pedido deletado!', 'success');
+        }
+
+        function atualizarResumoClientes() {
+            const container = document.getElementById('resumo-clientes');
+
+            const resumo = {};
+            clientes.forEach(c => {
+                resumo[c.id] = {
+                    nome: c.nome,
+                    pedidos: 0,
+                    total: 0
+                };
+            });
+
+            pedidos.forEach(p => {
+                if (resumo[p.clienteId]) {
+                    resumo[p.clienteId].pedidos += 1;
+                    resumo[p.clienteId].total += p.total;
+                }
+            });
+
+            if (Object.keys(resumo).length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum cliente</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Cliente</th><th>Qtd Pedidos</th><th>Valor Total</th><th>Ticket Médio</th></tr></thead><tbody>';
+
+            Object.values(resumo).sort((a, b) => b.total - a.total).forEach(r => {
+                const ticketMedio = r.pedidos > 0 ? r.total / r.pedidos : 0;
+                html += `<tr>
+                    <td><strong>${r.nome}</strong></td>
+                    <td>${r.pedidos}</td>
+                    <td>R$ ${r.total.toFixed(2).replace('.', ',')}</td>
+                    <td>R$ ${ticketMedio.toFixed(2).replace('.', ',')}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ===== NOTAS FISCAIS =====
+        function adicionarNotaFiscal() {
+            const clienteId = document.getElementById('nf-cliente').value;
+            const numero = document.getElementById('nf-numero').value.trim();
+            const valor = parseFloat(document.getElementById('nf-valor').value);
+            const data = document.getElementById('nf-data').value;
+            const obs = document.getElementById('nf-obs').value.trim();
+
+            if (!clienteId || !numero || !valor || valor <= 0 || !data) {
+                alert('Preencha cliente, número, valor e data da NF');
+                return;
+            }
+
+            const nf = {
+                id: Date.now(),
+                clienteId,
+                numero,
+                valor,
+                data,
+                obs,
+                dataCriacao: new Date().toLocaleString()
+            };
+
+            notasFiscais.push(nf);
+            salvarDados();
+            limparFormNF();
+            renderNotasFiscais();
+            atualizarReconciliacao();
+            mostrarMensagem('Nota Fiscal registrada com sucesso!', 'success');
+        }
+
+        function editarNotaFiscal(nfId) {
+            const nf = notasFiscais.find(n => n.id === nfId);
+            if (!nf) return;
+
+            const novoNumero = prompt('Número da NF:', nf.numero);
+            if (!novoNumero) return;
+
+            const novoValor = prompt('Valor da NF:', nf.valor);
+            if (!novoValor) return;
+
+            const novoValorNum = parseFloat(novoValor);
+            if (novoValorNum <= 0) {
+                alert('Valor inválido');
+                return;
+            }
+
+            nf.numero = novoNumero.trim();
+            nf.valor = novoValorNum;
+
+            salvarDados();
+            renderNotasFiscais();
+            atualizarReconciliacao();
+            mostrarMensagem('Nota Fiscal atualizada!', 'success');
+        }
+
+        function deletarNotaFiscal(nfId) {
+            if (!confirm('Tem certeza?')) return;
+            notasFiscais = notasFiscais.filter(n => n.id !== nfId);
+            salvarDados();
+            renderNotasFiscais();
+            atualizarReconciliacao();
+            mostrarMensagem('Nota Fiscal deletada!', 'success');
+        }
+
+        function renderNotasFiscais() {
+            const lista = document.getElementById('lista-notas-fiscais');
+
+            if (notasFiscais.length === 0) {
+                lista.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhuma nota fiscal registrada</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Data</th><th>Cliente</th><th>NF</th><th>Valor</th><th>Obs</th><th>Ações</th></tr></thead><tbody>';
+
+            [...notasFiscais].reverse().forEach(nf => {
+                const cliente = clientes.find(c => c.id == nf.clienteId);
+                html += `<tr>
+                    <td>${new Date(nf.data).toLocaleDateString('pt-BR')}</td>
+                    <td>${cliente ? cliente.nome : 'Desconhecido'}</td>
+                    <td><strong>${nf.numero}</strong></td>
+                    <td>R$ ${nf.valor.toFixed(2).replace('.', ',')}</td>
+                    <td>${nf.obs}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-info btn-small" onclick="editarNotaFiscal(${nf.id})">✎ Editar</button>
+                            <button class="btn-danger btn-small" onclick="deletarNotaFiscal(${nf.id})">✕ Deletar</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            lista.innerHTML = html;
+        }
+
+        function filtrarNotasFiscais() {
+            const clienteId = document.getElementById('filtro-nf-cliente').value;
+            const dataDe = document.getElementById('filtro-nf-data-de').value;
+            const dataAte = document.getElementById('filtro-nf-data-ate').value;
+
+            let filtradas = notasFiscais;
+
+            if (clienteId) {
+                filtradas = filtradas.filter(n => n.clienteId == clienteId);
+            }
+            if (dataDe) {
+                filtradas = filtradas.filter(n => n.data >= dataDe);
+            }
+            if (dataAte) {
+                filtradas = filtradas.filter(n => n.data <= dataAte);
+            }
+
+            const lista = document.getElementById('lista-notas-fiscais');
+
+            if (filtradas.length === 0) {
+                lista.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum resultado</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Data</th><th>Cliente</th><th>NF</th><th>Valor</th><th>Obs</th><th>Ações</th></tr></thead><tbody>';
+
+            filtradas.forEach(nf => {
+                const cliente = clientes.find(c => c.id == nf.clienteId);
+                html += `<tr>
+                    <td>${new Date(nf.data).toLocaleDateString('pt-BR')}</td>
+                    <td>${cliente ? cliente.nome : 'Desconhecido'}</td>
+                    <td><strong>${nf.numero}</strong></td>
+                    <td>R$ ${nf.valor.toFixed(2).replace('.', ',')}</td>
+                    <td>${nf.obs}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-info btn-small" onclick="editarNotaFiscal(${nf.id})">✎ Editar</button>
+                            <button class="btn-danger btn-small" onclick="deletarNotaFiscal(${nf.id})">✕ Deletar</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            lista.innerHTML = html;
+        }
+
+        function limparFiltrosNF() {
+            document.getElementById('filtro-nf-cliente').value = '';
+            document.getElementById('filtro-nf-data-de').value = '';
+            document.getElementById('filtro-nf-data-ate').value = '';
+            renderNotasFiscais();
+        }
+
+        function limparFormNF() {
+            document.getElementById('nf-cliente').value = '';
+            document.getElementById('nf-numero').value = '';
+            document.getElementById('nf-valor').value = '';
+            document.getElementById('nf-obs').value = '';
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('nf-data').value = hoje;
+        }
+
+        function atualizarReconciliacao() {
+            const totalPedidos = pedidos.reduce((sum, p) => sum + p.total, 0);
+            const totalNFs = notasFiscais.reduce((sum, n) => sum + n.valor, 0);
+            const diferenca = totalPedidos - totalNFs;
+            const percentualFaturado = pedidos.length > 0 ? (notasFiscais.length / pedidos.length * 100) : 0;
+
+            document.getElementById('reconciliacao-total-pedidos').textContent = 'R$ ' + totalPedidos.toFixed(2).replace('.', ',');
+            document.getElementById('reconciliacao-total-nfs').textContent = 'R$ ' + totalNFs.toFixed(2).replace('.', ',');
+            document.getElementById('reconciliacao-diferenca').textContent = 'R$ ' + Math.abs(diferenca).toFixed(2).replace('.', ',');
+            document.getElementById('reconciliacao-pedidos-faturados').textContent = percentualFaturado.toFixed(1) + '%';
+
+            atualizarReconciliacaoPorCliente();
+        }
+
+        function atualizarReconciliacaoPorCliente() {
+            const container = document.getElementById('reconciliacao-por-cliente');
+            
+            const resumo = {};
+            clientes.forEach(c => {
+                resumo[c.id] = {
+                    nome: c.nome,
+                    pedidosTotal: 0,
+                    nfsTotal: 0,
+                    pedidosQtd: 0,
+                    nfsQtd: 0,
+                    status: 'ok'
+                };
+            });
+
+            pedidos.forEach(p => {
+                if (resumo[p.clienteId]) {
+                    resumo[p.clienteId].pedidosTotal += p.total;
+                    resumo[p.clienteId].pedidosQtd += 1;
+                }
+            });
+
+            notasFiscais.forEach(n => {
+                if (resumo[n.clienteId]) {
+                    resumo[n.clienteId].nfsTotal += n.valor;
+                    resumo[n.clienteId].nfsQtd += 1;
+                }
+            });
+
+            // Determinar status
+            Object.keys(resumo).forEach(clienteId => {
+                const diff = resumo[clienteId].pedidosTotal - resumo[clienteId].nfsTotal;
+                if (Math.abs(diff) < 0.01) {
+                    resumo[clienteId].status = 'ok';
+                } else if (diff > 0) {
+                    resumo[clienteId].status = 'pending';
+                } else {
+                    resumo[clienteId].status = 'alert';
+                }
+            });
+
+            if (Object.keys(resumo).length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum cliente</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Cliente</th><th>Pedidos</th><th>Qtd Pedidos</th><th>NFs Emitidas</th><th>Qtd NFs</th><th>Diferença</th><th>Status</th></tr></thead><tbody>';
+
+            Object.values(resumo).sort((a, b) => b.pedidosTotal - a.pedidosTotal).forEach(r => {
+                const diff = r.pedidosTotal - r.nfsTotal;
+                let statusClass = 'badge-success';
+                let statusText = '✓ Ok';
+                
+                if (r.status === 'pending') {
+                    statusClass = 'badge-warning';
+                    statusText = '⚠ Pendente';
+                } else if (r.status === 'alert') {
+                    statusClass = 'badge-danger';
+                    statusText = '✕ Alerta';
+                }
+
+                html += `<tr>
+                    <td><strong>${r.nome}</strong></td>
+                    <td>R$ ${r.pedidosTotal.toFixed(2).replace('.', ',')}</td>
+                    <td>${r.pedidosQtd}</td>
+                    <td>R$ ${r.nfsTotal.toFixed(2).replace('.', ',')}</td>
+                    <td>${r.nfsQtd}</td>
+                    <td>R$ ${Math.abs(diff).toFixed(2).replace('.', ',')}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function exportarExcel() {
+            const wsClientes = XLSX.utils.json_to_sheet(clientes.map(c => ({
+                'Nome/Empresa': c.nome,
+                'Contato': c.contato,
+                'Email': c.email,
+                'Endereço': c.endereco
+            })));
+
+            const wsPedidos = XLSX.utils.json_to_sheet(pedidos.map(p => {
+                const cliente = clientes.find(c => c.id == p.clienteId);
+                return {
+                    'Data': new Date(p.data).toLocaleDateString('pt-BR'),
+                    'Cliente': cliente ? cliente.nome : 'Desconhecido',
+                    'Qtd Itens': p.items.length,
+                    'Total': p.total,
+                    'Observações': p.obs
+                };
+            }));
+
+            const wsNotasFiscais = XLSX.utils.json_to_sheet(notasFiscais.map(n => {
+                const cliente = clientes.find(c => c.id == n.clienteId);
+                return {
+                    'Data': new Date(n.data).toLocaleDateString('pt-BR'),
+                    'Cliente': cliente ? cliente.nome : 'Desconhecido',
+                    'NF': n.numero,
+                    'Valor': n.valor,
+                    'Observações': n.obs
+                };
+            }));
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, wsClientes, 'Clientes');
+            XLSX.utils.book_append_sheet(wb, wsPedidos, 'Pedidos');
+            XLSX.utils.book_append_sheet(wb, wsNotasFiscais, 'Notas Fiscais');
+
+            XLSX.writeFile(wb, 'Hortifruti_Gava_' + new Date().toISOString().split('T')[0] + '.xlsx');
+            mostrarMensagem('Arquivo exportado!', 'success');
+        }
+
+        function exportarPDF() {
+            const element = document.createElement('div');
+            element.innerHTML = `
+                <h2 style="text-align: center; margin-bottom: 20px;">Hortifruti Gava - Relatório Completo</h2>
+                <p style="text-align: center; margin-bottom: 30px;">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+
+                <h3>Pedidos Registrados</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="border: 1px solid #999; padding: 8px;">Data</th>
+                            <th style="border: 1px solid #999; padding: 8px;">Cliente</th>
+                            <th style="border: 1px solid #999; padding: 8px;">Itens</th>
+                            <th style="border: 1px solid #999; padding: 8px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pedidos.map(p => {
+                            const cliente = clientes.find(c => c.id == p.clienteId);
+                            return `<tr>
+                                <td style="border: 1px solid #999; padding: 8px;">${new Date(p.data).toLocaleDateString('pt-BR')}</td>
+                                <td style="border: 1px solid #999; padding: 8px;">${cliente ? cliente.nome : 'Desconhecido'}</td>
+                                <td style="border: 1px solid #999; padding: 8px;">${p.items.length}</td>
+                                <td style="border: 1px solid #999; padding: 8px; text-align: right;">R$ ${p.total.toFixed(2)}</td>
+                            </tr>`;
+                        }).join('')}
+                        <tr style="background: #f0f0f0; font-weight: bold;">
+                            <td colspan="3" style="border: 1px solid #999; padding: 8px; text-align: right;">TOTAL PEDIDOS:</td>
+                            <td style="border: 1px solid #999; padding: 8px; text-align: right;">R$ ${pedidos.reduce((s, p) => s + p.total, 0).toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Notas Fiscais Emitidas</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="border: 1px solid #999; padding: 8px;">Data</th>
+                            <th style="border: 1px solid #999; padding: 8px;">Cliente</th>
+                            <th style="border: 1px solid #999; padding: 8px;">NF</th>
+                            <th style="border: 1px solid #999; padding: 8px;">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${notasFiscais.map(n => {
+                            const cliente = clientes.find(c => c.id == n.clienteId);
+                            return `<tr>
+                                <td style="border: 1px solid #999; padding: 8px;">${new Date(n.data).toLocaleDateString('pt-BR')}</td>
+                                <td style="border: 1px solid #999; padding: 8px;">${cliente ? cliente.nome : 'Desconhecido'}</td>
+                                <td style="border: 1px solid #999; padding: 8px;">${n.numero}</td>
+                                <td style="border: 1px solid #999; padding: 8px; text-align: right;">R$ ${n.valor.toFixed(2)}</td>
+                            </tr>`;
+                        }).join('')}
+                        <tr style="background: #f0f0f0; font-weight: bold;">
+                            <td colspan="3" style="border: 1px solid #999; padding: 8px; text-align: right;">TOTAL NFs:</td>
+                            <td style="border: 1px solid #999; padding: 8px; text-align: right;">R$ ${notasFiscais.reduce((s, n) => s + n.valor, 0).toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Resumo</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #f0f0f0;">
+                        <td style="border: 1px solid #999; padding: 8px;"><strong>Total em Pedidos:</strong></td>
+                        <td style="border: 1px solid #999; padding: 8px; text-align: right;">R$ ${pedidos.reduce((s, p) => s + p.total, 0).toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #999; padding: 8px;"><strong>Total em NFs:</strong></td>
+                        <td style="border: 1px solid #999; padding: 8px; text-align: right;">R$ ${notasFiscais.reduce((s, n) => s + n.valor, 0).toFixed(2)}</td>
+                    </tr>
+                    <tr style="background: #f0f0f0;">
+                        <td style="border: 1px solid #999; padding: 8px;"><strong>Diferença:</strong></td>
+                        <td style="border: 1px solid #999; padding: 8px; text-align: right;">R$ ${Math.abs(pedidos.reduce((s, p) => s + p.total, 0) - notasFiscais.reduce((s, n) => s + n.valor, 0)).toFixed(2)}</td>
+                    </tr>
+                </table>
+            `;
+
+            html2pdf().set({
+                margin: 10,
+                filename: 'Hortifruti_Gava_' + new Date().toISOString().split('T')[0] + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            }).save(element);
+
+            mostrarMensagem('PDF gerado!', 'success');
+        }
+
+        function gerarPDF(pedidoId) {
+            try {
+                const pedido = pedidos.find(p => p.id === pedidoId);
+                const cliente = clientes.find(c => c.id == pedido.clienteId);
+
+                if (!pedido || !cliente) {
+                    mostrarMensagem('Pedido ou cliente não encontrado!', 'error');
+                    return;
+                }
+
+                // Calcular font-size dinâmico baseado na quantidade de itens
+                const qtdItens = pedido.items.length;
+                let fontSize, headerSize, dataSize, titleSize;
+                
+                if (qtdItens <= 3) {
+                    fontSize = 32;
+                    headerSize = 64;
+                    dataSize = 18;
+                    titleSize = 28;
+                } else if (qtdItens <= 6) {
+                    fontSize = 24;
+                    headerSize = 52;
+                    dataSize = 16;
+                    titleSize = 24;
+                } else if (qtdItens <= 10) {
+                    fontSize = 18;
+                    headerSize = 40;
+                    dataSize = 14;
+                    titleSize = 20;
+                } else if (qtdItens <= 15) {
+                    fontSize = 14;
+                    headerSize = 32;
+                    dataSize = 12;
+                    titleSize = 16;
+                } else {
+                    fontSize = 12;
+                    headerSize = 28;
+                    dataSize = 11;
+                    titleSize = 14;
+                }
+
+                // Criar conteúdo HTML para impressão
+                let htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Pedido</title>
+                        <style>
+                            * {
+                                margin: 0;
+                                padding: 0;
+                                box-sizing: border-box;
+                            }
+                            body {
+                                font-family: Arial, sans-serif;
+                                padding: 30px;
+                                line-height: 1.4;
+                            }
+                            .header {
+                                text-align: center;
+                                margin-bottom: 15px;
+                            }
+                            .empresa {
+                                font-size: ${headerSize}px;
+                                font-weight: bold;
+                                margin: 0;
+                                color: #000;
+                            }
+                            .data {
+                                font-size: ${dataSize}px;
+                                margin: 8px 0 25px 0;
+                                color: #333;
+                            }
+                            .pedido-titulo {
+                                font-size: ${titleSize}px;
+                                font-weight: bold;
+                                margin: 20px 0 15px 0;
+                                border-bottom: 2px solid #000;
+                                padding-bottom: 8px;
+                            }
+                            .itens-list {
+                                margin-top: 15px;
+                            }
+                            .item {
+                                display: flex;
+                                justify-content: space-between;
+                                border-bottom: 1px solid #ddd;
+                                padding: 8px 0;
+                                font-size: ${fontSize}px;
+                                font-weight: bold;
+                            }
+                            .item:last-child {
+                                border-bottom: none;
+                            }
+                            .item-nome {
+                                flex: 1;
+                            }
+                            .item-qtd {
+                                text-align: right;
+                                min-width: 150px;
+                                padding-left: 15px;
+                            }
+                            @media print {
+                                body { margin: 0; padding: 15px; }
+                                .item { page-break-inside: avoid; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1 class="empresa">${cliente.nome}</h1>
+                            <div class="data">${new Date(pedido.data).toLocaleDateString('pt-BR')}</div>
+                        </div>
+
+                        <div class="pedido-titulo">Pedido:</div>
+                        
+                        <div class="itens-list">
+                            ${pedido.items.map((item) => `
+                                <div class="item">
+                                    <div class="item-nome">${item.nome}</div>
+                                    <div class="item-qtd">${item.quantidade.toFixed(2).replace('.', ',')} ${item.unidade}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </body>
+                    </html>
+                `;
+
+                // Abrir em nova janela
+                const novaJanela = window.open('', '_blank');
+                novaJanela.document.write(htmlContent);
+                novaJanela.document.close();
+                
+                // Chamar print após um pequeno delay
+                setTimeout(() => {
+                    novaJanela.print();
+                    mostrarMensagem('📄 Pedido pronto para separação!', 'success');
+                }, 500);
+
+            } catch (err) {
+                console.error('Erro detalhado:', err);
+                mostrarMensagem('❌ Erro ao gerar PDF. Tente novamente.', 'error');
+            }
+        }
+
+        function fazerBackup() {
+            const backup = {
+                clientes,
+                tabelas,
+                tabelasPreco,
+                pedidos,
+                notasFiscais,
+                data: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'backup_Hortifruti_Gava_' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            mostrarMensagem('Backup realizado!', 'success');
+        }
+
+        function restaurarBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    clientes = backup.clientes || [];
+                    tabelas = backup.tabelas || {};
+                    tabelasPreco = backup.tabelasPreco || {};
+                    pedidos = backup.pedidos || [];
+                    notasFiscais = backup.notasFiscais || [];
+                    salvarDados();
+                    atualizarTudo();
+                    mostrarMensagem('Backup restaurado!', 'success');
+                } catch (err) {
+                    mostrarMensagem('Erro ao restaurar!', 'error');
+                }
+            };
+            reader.readAsText(file);
+            document.getElementById('upload-backup').value = '';
+        }
+
+        function limparTodosDados() {
+            if (!confirm('Tem certeza? Isso vai deletar TUDO!')) return;
+            if (!confirm('Confirma novamente?')) return;
+
+            clientes = [];
+            tabelas = {};
+            tabelasPreco = {};
+            pedidos = [];
+            notasFiscais = [];
+            salvarDados();
+            atualizarTudo();
+            mostrarMensagem('Dados apagados!', 'success');
+        }
+
+        async function carregarDadosFirebase() {
+            if (!useFirebase || !db) return;
+            
+            try {
+                // Sincronização em tempo real
+                db.collection('dados').doc('dados-app').onSnapshot((docSnap) => {
+                    if (docSnap.exists) {
+                        const dados = docSnap.data();
+                        clientes = dados.clientes || [];
+                        tabelas = dados.tabelas || {};
+                        tabelasPreco = dados.tabelasPreco || {};
+                        pedidos = dados.pedidos || [];
+                        notasFiscais = dados.notasFiscais || [];
+                        
+                        console.log('✓ Dados sincronizados do Firebase!');
+                        
+                        // Atualizar UI
+                        renderClientes();
+                        atualizarSelectClientes();
+                        atualizarSelectTabelas();
+                        atualizarTudo();
+                    } else {
+                        console.log('Nenhum dado encontrado no Firebase, usando localStorage');
+                    }
+                }, (error) => {
+                    console.error('Erro ao sincronizar dados:', error);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados do Firebase:', error);
+            }
+        }
+
+        // Função de sincronização automática
+        function sincronizarDados() {
+            carregarDadosFirebase();
+        }
+
+        function salvarDados() {
+            // Salvar no localStorage (backup local)
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            localStorage.setItem('tabelas', JSON.stringify(tabelas));
+            localStorage.setItem('tabelasPreco', JSON.stringify(tabelasPreco));
+            localStorage.setItem('pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('notasFiscais', JSON.stringify(notasFiscais));
+
+            // Salvar no Firebase (sincronização na nuvem)
+            if (useFirebase && db) {
+                try {
+                    db.collection('dados').doc('dados-app').set({
+                        clientes,
+                        tabelas,
+                        tabelasPreco,
+                        pedidos,
+                        notasFiscais,
+                        ultimaAtualizacao: new Date().toISOString()
+                    });
+                    console.log('✓ Dados salvos no Firebase!');
+                } catch (error) {
+                    console.error('Erro ao salvar no Firebase:', error);
+                }
+            }
+        }
+
+        function atualizarTudo() {
+            inicializar();
+            document.getElementById('info-total-clientes').textContent = clientes.length;
+            document.getElementById('info-total-pedidos').textContent = pedidos.length;
+            document.getElementById('info-valor-pedidos').textContent = 'R$ ' + pedidos.reduce((s, p) => s + p.total, 0).toFixed(2).replace('.', ',');
+            document.getElementById('info-ultima-atualizacao').textContent = new Date().toLocaleString('pt-BR');
+            renderNotasFiscais();
+        }
+
+        function fecharModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function mostrarMensagem(texto, tipo) {
+            const msg = document.createElement('div');
+            msg.className = 'message ' + tipo;
+            msg.textContent = texto;
+            msg.style.display = 'block';
+            document.body.insertBefore(msg, document.body.firstChild);
+            setTimeout(() => msg.remove(), 3000);
+        }
+
+        window.onclick = function(event) {
+            ['modalEditarCliente', 'modalVerPedido'].forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        };
+
+        // ===== ABAS DE CONFIGURAÇÃO =====
+        function mostrarConfigTab(tabId, btn) {
+            // Esconder todos os config-tab-content
+            document.querySelectorAll('.config-tab-content').forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.display = 'none';
+            });
+            
+            // Remover class active de todos os botões
+            document.querySelectorAll('.config-tab-btn').forEach(botao => {
+                botao.classList.remove('active');
+            });
+            
+            // Mostrar o tab selecionado
+            const tabElement = document.getElementById(tabId);
+            if (tabElement) {
+                tabElement.classList.add('active');
+                tabElement.style.display = 'block';
+            }
+            
+            // Marcar o botão como ativo
+            if (btn) {
+                btn.classList.add('active');
+            }
+        }
+
+        // ===== FILTROS DE PEDIDOS =====
+        function preencherSelectFiltrosPedidos() {
+            const select = document.getElementById('pedidos-filtro-cliente');
+            if (!select) return;
+            
+            const valor = select.value;
+            select.innerHTML = '<option value="">Todos os Clientes</option>';
+            clientes.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+            });
+            select.value = valor;
+        }
+
+        function limparFiltrosPedidos() {
+            document.getElementById('pedidos-filtro-cliente').value = '';
+            document.getElementById('pedidos-data-inicial').value = '';
+            document.getElementById('pedidos-data-final').value = '';
+            atualizarEstatisticasPedidos();
+        }
+
+        // ===== FILTROS DE RECONCILIAÇÃO =====
+        function preencherSelectFiltrosReconciliacao() {
+            const select = document.getElementById('reconciliacao-filtro-cliente');
+            if (!select) return;
+            
+            const valor = select.value;
+            select.innerHTML = '<option value="">Todos os Clientes</option>';
+            clientes.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+            });
+            select.value = valor;
+        }
+
+        function limparFiltrosReconciliacao() {
+            document.getElementById('reconciliacao-filtro-cliente').value = '';
+            document.getElementById('reconciliacao-data-inicial').value = '';
+            document.getElementById('reconciliacao-data-final').value = '';
+            atualizarReconciliacao();
+        }
+
+        // Sobrescrever atualizarReconciliacao para aplicar filtros
+        const atualizarReconciliacaoOriginal = atualizarReconciliacao;
+        atualizarReconciliacao = function() {
+            const clienteFiltro = document.getElementById('reconciliacao-filtro-cliente')?.value || '';
+            const dataInicial = document.getElementById('reconciliacao-data-inicial')?.value || '';
+            const dataFinal = document.getElementById('reconciliacao-data-final')?.value || '';
+
+            // Filtrar pedidos
+            let pedidosFiltrados = pedidos;
+            if (clienteFiltro) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.clienteId == clienteFiltro);
+            }
+            if (dataInicial) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) >= new Date(dataInicial));
+            }
+            if (dataFinal) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) <= new Date(dataFinal));
+            }
+
+            // Filtrar notas fiscais
+            let nfFiltradas = notasFiscais;
+            if (clienteFiltro) {
+                nfFiltradas = nfFiltradas.filter(n => n.clienteId == clienteFiltro);
+            }
+            if (dataInicial) {
+                nfFiltradas = nfFiltradas.filter(n => new Date(n.data) >= new Date(dataInicial));
+            }
+            if (dataFinal) {
+                nfFiltradas = nfFiltradas.filter(n => new Date(n.data) <= new Date(dataFinal));
+            }
+
+            const totalPedidos = pedidosFiltrados.reduce((sum, p) => sum + p.total, 0);
+            const totalNFs = nfFiltradas.reduce((sum, n) => sum + n.valor, 0);
+            const diferenca = totalPedidos - totalNFs;
+            const percentualFaturado = pedidosFiltrados.length > 0 ? (nfFiltradas.length / pedidosFiltrados.length * 100) : 0;
+
+            document.getElementById('reconciliacao-total-pedidos').textContent = 'R$ ' + totalPedidos.toFixed(2).replace('.', ',');
+            document.getElementById('reconciliacao-total-nfs').textContent = 'R$ ' + totalNFs.toFixed(2).replace('.', ',');
+            document.getElementById('reconciliacao-diferenca').textContent = 'R$ ' + Math.abs(diferenca).toFixed(2).replace('.', ',');
+            document.getElementById('reconciliacao-pedidos-faturados').textContent = percentualFaturado.toFixed(1) + '%';
+
+            atualizarReconciliacaoPorClienteFiltrado(clienteFiltro, dataInicial, dataFinal);
+        };
+
+        function atualizarReconciliacaoPorClienteFiltrado(clienteFiltro, dataInicial, dataFinal) {
+            const container = document.getElementById('reconciliacao-por-cliente');
+            
+            const resumo = {};
+            clientes.forEach(c => {
+                resumo[c.id] = {
+                    nome: c.nome,
+                    pedidosTotal: 0,
+                    nfsTotal: 0,
+                    pedidosQtd: 0,
+                    nfsQtd: 0,
+                    status: 'ok'
+                };
+            });
+
+            let pedidosFiltrados = pedidos;
+            if (clienteFiltro) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.clienteId == clienteFiltro);
+            }
+            if (dataInicial) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) >= new Date(dataInicial));
+            }
+            if (dataFinal) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) <= new Date(dataFinal));
+            }
+
+            let nfFiltradas = notasFiscais;
+            if (clienteFiltro) {
+                nfFiltradas = nfFiltradas.filter(n => n.clienteId == clienteFiltro);
+            }
+            if (dataInicial) {
+                nfFiltradas = nfFiltradas.filter(n => new Date(n.data) >= new Date(dataInicial));
+            }
+            if (dataFinal) {
+                nfFiltradas = nfFiltradas.filter(n => new Date(n.data) <= new Date(dataFinal));
+            }
+
+            pedidosFiltrados.forEach(p => {
+                if (resumo[p.clienteId]) {
+                    resumo[p.clienteId].pedidosTotal += p.total;
+                    resumo[p.clienteId].pedidosQtd += 1;
+                }
+            });
+
+            nfFiltradas.forEach(n => {
+                if (resumo[n.clienteId]) {
+                    resumo[n.clienteId].nfsTotal += n.valor;
+                    resumo[n.clienteId].nfsQtd += 1;
+                }
+            });
+
+            // Determinar status
+            Object.keys(resumo).forEach(clienteId => {
+                const diff = resumo[clienteId].pedidosTotal - resumo[clienteId].nfsTotal;
+                if (Math.abs(diff) < 0.01) {
+                    resumo[clienteId].status = 'ok';
+                } else if (diff > 0) {
+                    resumo[clienteId].status = 'pending';
+                } else {
+                    resumo[clienteId].status = 'alert';
+                }
+            });
+
+            // Filtrar apenas clientes com dados
+            const resumoFiltrado = {};
+            Object.keys(resumo).forEach(id => {
+                if (resumo[id].pedidosQtd > 0 || resumo[id].nfsQtd > 0) {
+                    resumoFiltrado[id] = resumo[id];
+                }
+            });
+
+            if (Object.keys(resumoFiltrado).length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum dado para exibir</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Cliente</th><th>Pedidos</th><th>Qtd Pedidos</th><th>NFs Emitidas</th><th>Qtd NFs</th><th>Diferença</th><th>Status</th></tr></thead><tbody>';
+
+            Object.values(resumoFiltrado).sort((a, b) => b.pedidosTotal - a.pedidosTotal).forEach(r => {
+                const diff = r.pedidosTotal - r.nfsTotal;
+                let statusClass = 'badge-success';
+                let statusText = '✓ Ok';
+                
+                if (r.status === 'pending') {
+                    statusClass = 'badge-warning';
+                    statusText = '⚠ Pendente';
+                } else if (r.status === 'alert') {
+                    statusClass = 'badge-danger';
+                    statusText = '✕ Alerta';
+                }
+
+                html += `<tr>
+                    <td><strong>${r.nome}</strong></td>
+                    <td>R$ ${r.pedidosTotal.toFixed(2).replace('.', ',')}</td>
+                    <td>${r.pedidosQtd}</td>
+                    <td>R$ ${r.nfsTotal.toFixed(2).replace('.', ',')}</td>
+                    <td>${r.nfsQtd}</td>
+                    <td>R$ ${Math.abs(diff).toFixed(2).replace('.', ',')}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ===== FILTROS DE RELATÓRIOS =====
+        function preencherSelectFiltrosRelatorios() {
+            const select = document.getElementById('relatorios-filtro-cliente');
+            if (!select) return;
+            
+            const valor = select.value;
+            select.innerHTML = '<option value="">Todos os Clientes</option>';
+            clientes.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+            });
+            select.value = valor;
+        }
+
+        function limparFiltrosRelatorios() {
+            document.getElementById('relatorios-filtro-cliente').value = '';
+            document.getElementById('relatorios-data-inicial').value = '';
+            document.getElementById('relatorios-data-final').value = '';
+            atualizarRelatorios();
+        }
+
+        function atualizarRelatorios() {
+            const clienteFiltro = document.getElementById('relatorios-filtro-cliente')?.value || '';
+            const dataInicial = document.getElementById('relatorios-data-inicial')?.value || '';
+            const dataFinal = document.getElementById('relatorios-data-final')?.value || '';
+
+            atualizarResumoClientesFiltrado(clienteFiltro, dataInicial, dataFinal);
+        }
+
+        function atualizarResumoClientesFiltrado(clienteFiltro, dataInicial, dataFinal) {
+            const container = document.getElementById('resumo-clientes');
+
+            let pedidosFiltrados = pedidos;
+            if (clienteFiltro) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => p.clienteId == clienteFiltro);
+            }
+            if (dataInicial) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) >= new Date(dataInicial));
+            }
+            if (dataFinal) {
+                pedidosFiltrados = pedidosFiltrados.filter(p => new Date(p.data) <= new Date(dataFinal));
+            }
+
+            const resumo = {};
+            pedidosFiltrados.forEach(p => {
+                if (!resumo[p.clienteId]) {
+                    const cliente = clientes.find(c => c.id == p.clienteId);
+                    resumo[p.clienteId] = {
+                        nome: cliente ? cliente.nome : 'Desconhecido',
+                        total: 0,
+                        quantidade: 0,
+                        ticket: 0
+                    };
+                }
+                resumo[p.clienteId].total += p.total;
+                resumo[p.clienteId].quantidade += 1;
+            });
+
+            Object.keys(resumo).forEach(clienteId => {
+                resumo[clienteId].ticket = resumo[clienteId].total / resumo[clienteId].quantidade;
+            });
+
+            if (Object.keys(resumo).length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Nenhum dado para exibir</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Cliente</th><th>Total Vendido</th><th>Qtd Pedidos</th><th>Ticket Médio</th></tr></thead><tbody>';
+
+            Object.values(resumo).sort((a, b) => b.total - a.total).forEach(r => {
+                html += `<tr>
+                    <td><strong>${r.nome}</strong></td>
+                    <td>R$ ${r.total.toFixed(2).replace('.', ',')}</td>
+                    <td>${r.quantidade}</td>
+                    <td>R$ ${r.ticket.toFixed(2).replace('.', ',')}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Atualizar atualizarSelectClientes para incluir novos selects
+        const atualizarSelectClientesOriginal = atualizarSelectClientes;
+        atualizarSelectClientes = function() {
+            atualizarSelectClientesOriginal();
+            preencherSelectFiltrosPedidos();
+            preencherSelectFiltrosReconciliacao();
+            preencherSelectFiltrosRelatorios();
+        };
+
+        // INICIALIZAR O APLICATIVO
+        function inicializar() {
+            validarEstruturaDados();
+            // Carregar dados do Firebase (sincronização automática)
+            carregarDadosFirebase();
+            renderClientes();
+            atualizarSelectClientes();
+            atualizarSelectTabelas();
+        }
+
+        // CARREGAR QUANDO O DOM ESTIVER PRONTO
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se usuário já está autenticado
+            verificarAutenticacao();
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    mudarAba(this.dataset.tab);
+                });
+            });
+
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('nf-data').value = hoje;
+            document.getElementById('pedido-data').value = hoje;
+
+            atualizarTudo();
+        });
+        </script>
+    </body>
+</html>
